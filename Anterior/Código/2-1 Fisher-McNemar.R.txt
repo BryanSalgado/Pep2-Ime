@@ -1,0 +1,204 @@
+cat("\n\n")
+cat("Obesidad infantil\n")
+cat("==================\n")
+
+# Una de las primeras preguntas a responder por el último estudio nacional de
+# obesidad infantil fue si existían diferencias en la prevalencia de la obesidad
+# entre niños y niñas o si, por el contrario, el porcentaje de obesos no varía
+# entre sexos. Se les solicita responder esta pregunta, contando con las
+# primeras observaciones obtenidas en el estudio sobre una muestra de 14
+# menores:
+
+#       Obesidad
+# Sexo	 Sí	No
+# Niña 	  1	 4
+# Niño 	  7	 2
+
+# En este caso se tienen celdas de la tabla con menos de 5 observaciones, por lo
+# que hay que usar una prueba para muestras pequeñas.
+
+# Como los datos son independientes (no pareados), corresponde usar la prueba
+# exacta de Fisher.
+
+cat("\n")
+cat("H0: La obesidad infantil es independiente del sexo.\n")
+cat("HA: La obesidad infantil depende del sexo.\n")
+
+# Ahora podemos aplicar la prueba exacta de Fisher.
+#Cargamos primero los datos
+Niña <- c(1, 4)
+Niño <- c(7, 2)
+tabla <- rbind(Niño, Niña)
+colnames(tabla) <- c("Sí", "No")
+
+cat("\n")
+print(tabla)
+
+# Establecemos un nivel de significación.
+alfa <- 0.05
+
+# PROCEDIMIENTO PASO A PASO
+# Debemos calcular la probabilidad (suponiendo que la hipótesis nula es
+# verdadera) de obtener dicha tabla.
+
+# Función para calcular la probabilidad de una tabla.
+calcular_probabilidad <- function(a, b, c, d) {
+  numerador <- factorial(a+b) * factorial(c+d) * factorial(a+c) * factorial(b+d)
+  denominador <- factorial(a+b+c+d) * factorial(a) * factorial(b) *
+    factorial(c) * factorial(d)
+  
+  return(numerador/denominador)
+}
+
+probabilidad <- calcular_probabilidad(tabla[1,1], tabla[1,2], tabla[2,1],
+                                      tabla[2,2])
+
+# Calculamos los valores marginales.
+tabla_margenes <- addmargins(tabla)
+
+cat("\nTabla con totales por fila y columna:\n")
+print(tabla_margenes)
+
+# Ahora debemos generar todas las posibles tablas que entreguen los mismos
+# totales por fila y por columna, y calcular también sus probabilidades.
+# IMPORTANTE: la suma de las probabilidades de obtener cada una de las tablas
+# debe ser igual a 1.
+
+# El valor p de la prueba está dado por la suma de las probabilidades de todas
+# aquellas tablas cuya probablidad sea menor o igual a la de nuestros datos.
+
+probabilidades <- c(probabilidad)
+
+# 8 1
+# 0 5
+
+probabilidad_tabla <- calcular_probabilidad(8, 1, 0, 5)
+
+if(probabilidad_tabla <= probabilidad) {
+  probabilidades <- c(probabilidades, probabilidad_tabla)
+}
+
+# 3 6
+# 5 0
+
+probabilidad_tabla <- calcular_probabilidad(3, 6, 5, 0)
+
+if(probabilidad_tabla <= probabilidad) {
+  probabilidades <- c(probabilidades, probabilidad_tabla)
+}
+
+# 6 3
+# 2 3
+
+probabilidad_tabla <- calcular_probabilidad(6, 3, 2, 3)
+
+if(probabilidad_tabla <= probabilidad) {
+  probabilidades <- c(probabilidades, probabilidad_tabla)
+}
+
+# 4 5
+# 4 1
+
+probabilidad_tabla <- calcular_probabilidad(4, 5, 4, 1)
+
+if(probabilidad_tabla <= probabilidad) {
+  probabilidades <- c(probabilidades, probabilidad_tabla)
+}
+
+# 5 4
+# 3 2
+
+probabilidad_tabla <- calcular_probabilidad(5, 4, 3, 2)
+
+if(probabilidad_tabla <= probabilidad) {
+  probabilidades <- c(probabilidades, probabilidad_tabla)
+}
+
+p <- sum(probabilidades)
+
+cat("\n")
+cat("Como p =", p, "> alfa =", alfa, ", se falla al rechazar la hipótesis nula.")
+cat("\nSe concluye, con", (1 - alfa) * 100, "% de confianza, que la obesidad infantil no depende del sexo del menor.\n")
+
+# USANDO FUNCIONES DE R
+# En R, la prueba exacta de Fisher puede hacerse más fácilmente.
+
+prueba <- fisher.test(tabla, conf.level = 1 - alfa)
+cat("\nResultado de la prueba exacta de Fisher:\n")
+print(prueba)
+
+
+
+cat("\n\n-----------------------------------------------------------------\n\n")
+
+cat("Desempeño de algoritmos\n")
+cat("==================\n")
+
+# En un artículo de García y colaboradores (2010) se describe un estudio en que
+# se compararon diferentes versiones de algoritmos evolutivos para resolver
+# variadas instancias de problemas de clasificación tomadas desde el repositorio
+# UCI Machine Learning. Suponga que la siguiente tabla muestra los resultados de
+# la clasificación hecha por dos versiones de un algoritmo genético evaluado en
+# el estudio para el problema Breast Cancer. ¿Consigue uno de los algoritmos
+# mejor desempeño?
+#
+#    AG v1	     AG v2
+# Incorrecta	  Correcta
+#   Correcta	  Correcta
+# Incorrecta	  Correcta
+#   Correcta	  Correcta
+# Incorrecta	Incorrecta
+# Incorrecta	  Correcta
+#   Correcta	  Correcta
+#   Correcta	Incorrecta
+#   Correcta	Incorrecta
+# Incorrecta	  Correcta
+# Incorrecta	  Correcta
+# Incorrecta	  Correcta
+
+# Primero construimos el data frame.
+ag_v1 <- c("Incorrecta",	"Correcta",	"Incorrecta",	"Correcta",	"Incorrecta",
+           "Incorrecta",	"Correcta",	"Correcta",	"Correcta",	"Incorrecta",
+           "Incorrecta",	"Incorrecta")
+
+ag_v2 <-	c("Correcta", "Correcta", "Correcta", "Correcta", "Incorrecta",
+           "Correcta", "Correcta", "Incorrecta", "Incorrecta", "Correcta",
+           "Correcta", "Correcta")
+
+tabla <- table(data.frame(ag_v1, ag_v2))
+print(tabla)
+
+# Como tenemos celdas con menos de 5 observaciones, se debe usar una prueba
+# para muestras pequeñas. Además, sabemos que en este caso las observaciones
+# están pareadas, por lo que corresponde usar la prueba de McNemar.
+
+cat("\n")
+cat("H0: Los algoritmos tienen igual desempeño.\n")
+cat("HA: Los algoritmos tienen distinto desempeño.\n")
+
+# Establecemos un nivel de significación.
+alfa <- 0.05
+
+# PROCEDIMIENTO PASO A PASO
+# Debemos calcular el estadístico chi-cuadrado.
+
+# Función para calcular el estadístico chi-cuadrado.
+calcular_chi_cuadrado <- function(b, c) {
+  numerador <- (abs(b - c) - 1) ** 2
+  denominador <- b + c
+  return(numerador/denominador)
+}
+
+chi_cuadrado <- calcular_chi_cuadrado(2, 6)
+
+# Obtenemos el valor p.
+p <- pchisq(chi_cuadrado, 1, lower.tail = FALSE)
+
+cat("\n")
+cat("Como p =", p, "> alfa =", alfa, ", se falla al rechazar la hipótesis nula.")
+cat("\nSe concluye, con", (1 - alfa) * 100, "% de confianza, que ambos algoritmos tienen igual desempeño.\n")
+
+# USANDO FUNCIONES DE R
+# En R, también existe una función para la prueba de McNemar.
+prueba <- mcnemar.test(tabla)
+print(prueba)
